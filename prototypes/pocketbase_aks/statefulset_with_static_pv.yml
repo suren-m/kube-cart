@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: pocketbase
+spec: {}
+status: {}
+
+---
+# https://github.com/kubernetes-sigs/azuredisk-csi-driver/tree/master/deploy/example/sharedisk#example
+# https://github.com/kubernetes-sigs/azuredisk-csi-driver/tree/master/deploy/example
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: pb-lrs-sc
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: StandardSSD_LRS  
+  resourceGroup: <rg-name>
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pb-disk-az1
+  labels:
+    app: pocketbase
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: pb-lrs-sc
+  csi:
+    driver: disk.csi.azure.com
+    readOnly: false
+    volumeHandle: /subscriptions/<sub>/resourceGroups/<rg-name>/providers/Microsoft.Compute/disks/pbdata-az1
+    volumeAttributes:
+      fsType: ext4
+          
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocketbase
+  namespace: pocketbase
+  labels:
+    app: pocketbase
+spec:
+  ports:
+  - port: 8080
+    name: pocketbase  
+  clusterIP: None
+  selector:
+    app: pocketbase
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pocketbase
+  namespace: pocketbase
+spec:
+  selector:
+    matchLabels:
+      app: pocketbase 
+  serviceName: "pocketbase"
+  replicas: 1 
+  minReadySeconds: 10 
+  template:
+    metadata:
+      labels:
+        app: pocketbase 
+    spec:
+      terminationGracePeriodSeconds: 10      
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: topology.disk.csi.azure.com/zone
+                operator: In
+                values:
+                - uksouth-1  
+      containers:
+      - name: pocketbase
+        image: ghcr.io/suren-m/kube-cart/prototypes/pocketbase:0.12.2
+        ports:
+        - containerPort: 8080
+          name: pocketbase
+        volumeMounts:
+        - name: pbdata
+          mountPath: /pb/pb_data
+  volumeClaimTemplates:
+  - metadata:
+      name: pbdata
+    spec:
+      selector:
+        matchLabels:
+          app: pocketbase
+      accessModes: [ "ReadWriteOnce" ]  
+      storageClassName: pb-lrs-sc      
+      resources:
+        requests:
+          storage: 10Gi
+
+
+# k exec -it web-1 -n pocketbase -- sh -c "ls /pb/pb_data"
+
+
