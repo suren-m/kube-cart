@@ -60,7 +60,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: py-web
-          image: ghcr.io/suren-m/kube-cart/workload-allocation/stateful-set:py
+          image: ghcr.io/suren-m/kube-cart/prototypes/workload-distribution:0.1
           ports:
             - containerPort: 9090
               name: web

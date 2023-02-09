@@ -17,7 +17,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: go-chat
-          image: ghcr.io/suren-m/ws-go-chat:0.6
+          image: ghcr.io/suren-m/kube-cart/prototypes/websockets-chat:0.6
           ports:
             - containerPort: 5000
               name: web     

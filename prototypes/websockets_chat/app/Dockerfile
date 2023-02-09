@@ -1,4 +1,5 @@
 FROM golang:latest
+LABEL org.opencontainers.image.source https://github.com/suren-m/kube-cart
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
