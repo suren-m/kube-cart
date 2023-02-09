@@ -20,7 +20,7 @@ spec:
         active: "true"
     spec:
       containers:
-      - image: ghcr.io/suren-m/ws-go-chat:0.2
+      - image: ghcr.io/suren-m/prototypes/websockets-chat:0.6
         name: ws-go-chat
         resources: {}
 status: {}
