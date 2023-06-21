@@ -2,8 +2,11 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    azure.workload.identity/client-id: ${ClusterMIClientId}
+    azure.workload.identity/client-id: "<client-id>"
   labels:
     azure.workload.identity/use: "true"
-  name: "appserviceaccount"
-  namespace: default
+  name: "appsa"
+  namespace: myapps
+
+# k get sa -n myapps
+# k describe sa appsa -n myapps
